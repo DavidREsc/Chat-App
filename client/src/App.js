@@ -8,36 +8,32 @@ import { AuthRequired } from './utils/AuthRequired'
 
 const App = () => {
   return (
+  <AuthProvider>
     <BrowserRouter>
       <Routes>
           <Route 
             path="/" 
             element={
-              <AuthProvider>
                 <AuthRequired>
                   <Chat/>
                 </AuthRequired>
-              </AuthProvider>
             }
           />   
         <Route 
           path="/login" 
           element={
-            <AuthProvider>
-              <Login/>
-            </AuthProvider>       
+              <Login/>       
           }
         />
         <Route 
           path="/signup" 
           element={
-            <AuthProvider>
               <Signup/>
-            </AuthProvider>
           }
         />
       </Routes>
     </BrowserRouter>
+  </AuthProvider>
   )
 }
 

@@ -7,8 +7,9 @@ const verifyUser = require('./middleware/verifyUser')
 const jwtGenerator = require('./middleware/jwtGenerator')
 const checkUser = require('./middleware/checkUser')
 const hashPassword = require('./middleware/hashPassword')
+const authorize = require('./middleware/authorize')
 const db = require('./db')
-const cookie = require('cookie')
+const cookieParser = require('cookie-parser')
 
 const app = express()
 // Create server and pass in the express app
@@ -17,11 +18,12 @@ const server = http.createServer(app)
 const io = socket(server)
 
 app.use(express.json())
+app.use(cookieParser())
 
 app.post('/api/v1/user/login', validateUserDetails, verifyUser, jwtGenerator, async (req, res) => {
     const {token} = req.body
     try {
-        res.cookie(token, {httpOnly: true})
+        res.cookie('token', token, {httpOnly: true})
         res.json(token)
     } catch (e) {
         res.status(500).send()
@@ -41,9 +43,13 @@ app.post('/api/v1/user/signup', validateUserDetails, checkUser, hashPassword,  a
     }
 })
 
+app.post('/api/v1/user/authorized', authorize, (req, res) => {
+    res.json('verified')
+})
+
+
 io.on('connection', (socket) => {
     console.log("New connection")
-    console.log(cookie.parse(socket.handshake.headers.cookie))
     socket.emit('welcome message', 'Welcome!')
     socket.broadcast.emit('user joined', 'A new user has joined')
 

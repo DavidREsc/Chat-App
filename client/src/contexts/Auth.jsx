@@ -1,4 +1,4 @@
-import React, {useContext, createContext, useState} from 'react'
+import React, {useContext, createContext, useState, useEffect} from 'react'
 import User from '../apis/User'
 
 const AuthContext = createContext()
@@ -7,7 +7,23 @@ export const useAuth = () => {
 }
 
 export const AuthProvider = ({children}) => {
-    const [user, setUser] = useState(null)
+    const [user, setUser] = useState(false)
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        const isAuthorized = async () => {
+            try {
+                await User.post('/authorized', {
+                    method: 'POST',
+                })
+                setUser(true)
+            } catch (error) {
+                setUser(false)
+            }
+            setLoading(false)
+        }
+        isAuthorized()
+    },[])
 
     const login = async (data) => {
         const {email, password} = data
@@ -19,7 +35,7 @@ export const AuthProvider = ({children}) => {
                 password
             })
             console.log(response.data)
-            setUser(response.data)
+            setUser(true)
         } catch (e) {
             throw new Error(e.response.data.error)
         }
@@ -45,12 +61,12 @@ export const AuthProvider = ({children}) => {
     const value = {
         user,
         login,
-        signup
+        signup,
     }
 
     return (
         <AuthContext.Provider value={value}>
-            {children}
+            {!loading && children}
         </AuthContext.Provider>
     )
 }
