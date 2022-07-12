@@ -1,4 +1,5 @@
-import React, {useContext, createContext, useState, useEffect} from 'react'
+import React, {useState, useContext, createContext, useEffect} from 'react'
+import {Navigate, useLocation} from 'react-router-dom'
 import User from '../apis/User'
 
 const AuthContext = createContext()
@@ -7,66 +8,47 @@ export const useAuth = () => {
 }
 
 export const AuthProvider = ({children}) => {
+
+    const [isAuth, setIsAuth] = useState(false)
     const [user, setUser] = useState(false)
     const [loading, setLoading] = useState(true)
+    const location = useLocation()
 
     useEffect(() => {
         const isAuthorized = async () => {
             try {
-                await User.post('/authorized', {
-                    method: 'POST',
+                const response = await User.post('/authorized', {
+                    method: 'POST'
                 })
-                setUser(true)
+                setIsAuth(true)
+                login(response.data)
             } catch (error) {
-                setUser(false)
+
             }
             setLoading(false)
         }
+        console.log('auth')
         isAuthorized()
     },[])
 
-    const login = async (data) => {
-        const {email, password} = data
-        try {
-            const response = await User.post('/login', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                email,
-                password
-            })
-            console.log(response.data)
-            setUser(true)
-        } catch (e) {
-            throw new Error(e.response.data.error)
-        }
+    const login = async (user) => {
+        setUser(user) 
     }
 
-    const signup = async (data) => {
-        const {firstName, lastName, email, password} = data
-        try {
-            const response = await User.post('/signup', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                firstName,
-                lastName,
-                email,
-                password
-            })
-            console.log(response.data)
-        } catch (e) {
-            throw new Error(e.response.data.error)
-        }
+    const logout = async () => {
+        setUser(false)
     }
 
     const value = {
-        user,
         login,
-        signup,
+        logout,
+        user,
+        isAuth
     }
 
     return (
         <AuthContext.Provider value={value}>
-            {!loading && children}
+            {!loading ? isAuth ? children : <Navigate to='/login' state={{prev: location}} replace /> : null }
         </AuthContext.Provider>
     )
 }

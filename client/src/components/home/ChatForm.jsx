@@ -1,4 +1,5 @@
 import React, {useState, useRef} from 'react'
+import { Input, Button, FormControl } from '@chakra-ui/react'
 
 const ChatForm = (props) => {
     const {sendMessage} = props
@@ -19,13 +20,17 @@ const ChatForm = (props) => {
   return (
     <div>
         <form onSubmit={handleSubmit}>
-            <input 
+          <FormControl>
+            <Input 
+              variant='filled'
               ref={$messageFormInput}
               type='text'
               value={message}
               onChange={(e) => setMessage(e.target.value)}
+              autoFocus
             />
-            <button ref={$messageFormButton}>Send</button>
+            <Button type='submit' ref={$messageFormButton}>Send</Button>
+          </FormControl>
         </form>
     </div>
   )

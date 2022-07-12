@@ -1,18 +1,12 @@
 const v = require('validator')
 
 const validateUserDetails = (req, res, next) => {
-    let {firstName, lastName, email, password} = req.body
-    if (firstName !== undefined) {
-        if (v.isEmpty(firstName)) return res.status(400).json({"error": "First name not provided"})
-        firstName = v.escape(firstName)
-        firstName = v.trim(firstName)
-        req.body.firstName = firstName
-    }
-    if (lastName !== undefined) {
-        if (v.isEmpty(lastName)) return res.status(400).json({"error": "Last name not provided"})
-        lastName = v.escape(lastName)
-        lastName = v.trim(lastName)
-        req.body.lastName = lastName
+    let {username, email, password} = req.body
+    if (username !== undefined) {
+        if (v.isEmpty(username)) return res.status(400).json({"error": "Username not provided"})
+        username = v.escape(username)
+        username = v.trim(username)
+        req.body.username = username
     }
     if (email !== undefined) {
         if (v.isEmpty(email)) return res.status(400).json({"error": "Email not provided"})

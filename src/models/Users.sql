@@ -1,8 +1,8 @@
 CREATE TABLE users (
-    id BIGSERIAL NOT NULL PRIMARY KEY,
-    first_name VARCHAR(64) NOT NULL,
-    last_name VARCHAR(64) NOT NULL,
-    email VARCHAR(128) NOT NULL,
-    password VARCHAR(256) NOT NULL,
-    verified BOOLEAN NOT NULL DEFAULT FALSE
+    user_id UUID NOT NULL DEFAULT uuid_generate_v4(),
+    username VARCHAR(32) NOT NULL UNIQUE,
+    email VARCHAR(64) NOT NULL UNIQUE,
+    password VARCHAR(64) NOT NULL,
+    verified BOOLEAN NOT NULL DEFAULT FALSE,
+    PRIMARY KEY(user_id)
 );
