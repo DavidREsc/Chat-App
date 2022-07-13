@@ -1,12 +1,13 @@
 import React, {useEffect, useState, useRef} from 'react'
-import ChatForm from '../components/home/ChatForm'
-import ChatBox from '../components/home/ChatBox'
+import ChatInput from '../components/home/ChatInput'
+import ChatDisplay from '../components/home/ChatDisplay'
 import AddFriend from '../components/home/AddFriend'
 import { ToastContainer, toast, Flip } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 //import { useAuth } from '../contexts/Auth'
 import {useSocket} from '../contexts/Socket'
 import '../styles/utils.css'
+import '../styles/chat.css'
 
 const Chat = () => {
 
@@ -71,12 +72,18 @@ const Chat = () => {
   }
 
   return (
-    <div>
-      <ChatBox messages={messages} />
-      <ChatForm sendMessage={sendMessage}/>
-      <AddFriend/>
-      <button onClick={updateToast}>click me</button>
-      <ToastContainer
+    <div className='chat-page'>
+      <div className='menu-section'>
+        <AddFriend/>
+      </div>
+      <div className='chat-section'>
+        <div className='chat-display-container'>
+          <ChatDisplay messages={messages} />
+        </div>
+        <ChatInput sendMessage={sendMessage}/>
+      </div>
+
+        <ToastContainer
         enableMultiContainer containerId={'A'}
         position="top-center"
         autoClose={5000}

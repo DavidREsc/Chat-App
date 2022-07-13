@@ -1,0 +1,52 @@
+.chat-page {
+    background-color: #f0f0f0;
+    height: 100vh;
+    display: flex;
+    flex-grow: 1;
+}
+
+.menu-section {
+    max-width: 20em;
+}
+
+.chat-section {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.chat-display-container {
+    
+    display: flex;
+    flex-grow: 1 1 auto;
+    overflow-y: scroll;
+    min-height: 0px;
+    transform: rotate(180deg);
+    direction: rtl;
+    background: black;
+}
+
+.chat-display {
+    background-color: black;
+    display: flex;
+    flex-grow: 1;
+    flex-direction: column-reverse;
+    justify-content: flex-end;
+
+}
+
+.chat-message {
+    background-color: red;
+    max-width: 20em;
+    border-radius: 10px;
+    margin: 1em;
+    overflow-wrap: break-word;
+    padding: 10px;
+    transform: rotate(180deg);
+    direction: ltr;
+    position: relative;
+    align-self: flex-start;
+}
+
+
+

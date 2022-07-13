@@ -28,6 +28,7 @@ const ChatForm = (props) => {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               autoFocus
+              autoComplete='off'
             />
             <Button type='submit' ref={$messageFormButton}>Send</Button>
           </FormControl>
