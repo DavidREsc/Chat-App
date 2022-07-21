@@ -1,4 +1,5 @@
-import React, {useEffect, useContext, createContext} from 'react'
+import React, {useEffect, useContext, createContext, useState} from 'react'
+import { Spinner } from '@chakra-ui/react'
 import {io} from 'socket.io-client'
 const socket = io({
     autoConnect: false,
@@ -10,10 +11,14 @@ export const useSocket = () => {
 }
 
 export const SocketProvider = ({children}) => {
+    const [loading, setLoading] = useState(true)
 
     useEffect(() => {
         socket.connect()
-        console.log('connect')
+        socket.on('connect', () => {
+            console.log("Connect")
+            setLoading(false)
+        })
     },[])
     
     const value = {
@@ -22,7 +27,17 @@ export const SocketProvider = ({children}) => {
 
     return (
         <SocketContext.Provider value={value}>
-            {children}
+            {loading ? 
+            <div className='loading-page'>
+                <Spinner  
+                    thickness='4px'
+                    speed='0.65s'
+                    emptyColor='gray.200'
+                    color='blue.500'
+                    size='xl'
+                />
+            </div>
+            : children}
         </SocketContext.Provider>
     )
 }

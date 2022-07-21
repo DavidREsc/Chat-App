@@ -5,3 +5,11 @@ html {
 body {
     background-color: #f0f0f0;
 }
+
+.loading-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: white;
+    height: 100vh;
+}

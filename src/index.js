@@ -8,6 +8,8 @@ const user = require('./routes/user')
 const friendRequest = require('./utils/friendRequest')
 const Redis = require('ioredis')
 const authorizeConnection = require('./utils/authorizeConnection')
+const updateRequestStatus = require('./utils/updateRequestStatus')
+const sendMessage = require('./utils/sendMessage')
 
 const app = express()
 // Create server and pass in the express app
@@ -43,24 +45,25 @@ io.use(async (socket, next) => {
 
 
 io.on('connection', (socket) => {
+   
 
-    console.log(socket.handshake.auth.user + ' connected')
-    //console.log(socket.handshake.auth.user)
-   // const response = await redis.get(socket.handshake.auth.user)
-    socket.emit('welcome message', "Welcome!")
-
-    socket.on('send message', (message, callback) => {
-        
-        io.emit('message', message)
+    socket.on('send message', (message, recipient, callback) => {
+        sendMessage(message, recipient, socket, io, redis)
         callback('Message delivered')
     })
 
-    socket.on('friend-request', async (username, callback) => {
+    socket.on('friend-request', (username, callback) => {
         friendRequest(io, socket, redis, username, callback)
     })
 
-    socket.on('disconnect', () => {
-        io.emit('user left', 'User has left')
+    socket.on('update-request-status', (from, status) => {
+        updateRequestStatus(from, status, socket.handshake.auth.user, socket, io, redis)
+    })
+
+    socket.on('disconnect', async () => {
+        const username = socket.handshake.auth.user
+        console.log(username + " has disconnected")
+        await redis.del(username)
     })
 
 })

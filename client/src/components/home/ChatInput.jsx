@@ -20,17 +20,20 @@ const ChatForm = (props) => {
   return (
     <div>
         <form onSubmit={handleSubmit}>
-          <FormControl>
+          <FormControl p='4' width='75%' display='flex' justifyContent='center' mb='10' ml='4'>
             <Input 
-              variant='filled'
+              background='white'
+              variant='outline'
               ref={$messageFormInput}
               type='text'
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               autoFocus
               autoComplete='off'
+              size='lg'
+              borderRadius='20'
             />
-            <Button type='submit' ref={$messageFormButton}>Send</Button>
+            <Button size='lg' width='20%' ml='5' colorScheme='messenger' type='submit' ref={$messageFormButton}>Send</Button>
           </FormControl>
         </form>
     </div>

@@ -1,21 +1,23 @@
-import React, {useEffect, useState, useRef} from 'react'
+import React, {useEffect, useState} from 'react'
 import ChatInput from '../components/home/ChatInput'
 import ChatDisplay from '../components/home/ChatDisplay'
-import AddFriend from '../components/home/AddFriend'
-import { ToastContainer, toast, Flip } from 'react-toastify';
+import SendFriendRequest from '../components/home/SendFriendRequest'
+import ReceiveFriendRequest from '../components/home/ReceiveFriendRequest'
+import FriendList from '../components/home/FriendList'
+import User from '../apis/User'
 import 'react-toastify/dist/ReactToastify.css';
-//import { useAuth } from '../contexts/Auth'
 import {useSocket} from '../contexts/Socket'
-import '../styles/utils.css'
 import '../styles/chat.css'
+import { Spinner } from '@chakra-ui/react'
 
 const Chat = () => {
 
   const [messages, setMessages] = useState([])
-  //const {user} = useAuth()
+  const [friendList, setFriendList] = useState([])
+  const [selectedFriend, setSelectedFriend] = useState("")
+  const [loading, setLoading] = useState(true)
   const {socket} = useSocket()
-  const toastId = useRef(null)
- 
+
   useEffect(() => {
     socket.on('connect', () => {
       console.log("Successfully connected")
@@ -24,76 +26,86 @@ const Chat = () => {
       console.log(m)
     })
     console.log("chat")
-    socket.on('message', (message) => setMessages(prev => [...prev, message]))
-    socket.on('user joined', (user) => console.log(user))
-    socket.on('receive-friend-request', (from) => {
-      console.log("Received")
-      toastId.current = toast.info(<span>
-          <p>{from} wants to be your friend</p>
-          <button style={{color: 'green', marginLeft: '35px'}} className='request-toast-btn' onClick={() => updateToast('accept')}>Accept</button>
-          <button style={{color: 'red', margin: '10px 30px'}} className='request-toast-btn' onClick={() => updateToast('decline')}>Decline</button>
-        </span>, {
-        containerId: 'A',
-        position: "top-center",
-        closeOnClick: false,
-        pauseOnHover: false,
-        autoClose: 5000,
-        hideProgressBar: false,
-        progress: undefined,
-        });
+    socket.on('receive-message', (message, friend) => {
+      setMessages(prev => [...prev, {
+        message,
+        friend,
+        "type": "received"
+      }])
     })
+    socket.on('user joined', (user) => console.log(user))
+    socket.on('accepted-friend-request', (friend) => {
+      setFriendList(prev => prev.concat(friend))
+    })
+    
     return () => {
       socket.off('welcome message')
       socket.off('message')
       socket.off('user joined')
+      socket.off('accepted-friend-request')
+      socket.disconnect(["yo"])
     }
   },[socket])
 
+  useEffect(() => {
+    const getData = async () => {
+      try {
+        const data = await User.get('/data', {
+          method: 'GET'
+        })
+        console.log(data.data.friends)
+        setFriendList(data.data.friends)
+        setSelectedFriend(data.data.friends[0].friend)
+        setMessages(data.data.messages)
+        setLoading(false)
+      } catch (e) {
+        console.log(e)
+      }
+    }
+    getData()
+  },[socket])
+
   const sendMessage = (message, callback) => {
-    socket.emit('send message', message, () => {
+    socket.emit('send message', message, selectedFriend, () => {
+      setMessages(prev => [...prev, {
+        message,
+        "friend": selectedFriend,
+        "type": "sent"
+      }])
       callback()
     })
   }
 
-  const updateToast = (status) => {
-    if (status === 'accept') {
-      toast.update(toastId.current, {
-        render: "Accepted friend request",
-        type: toast.TYPE.SUCCESS,
-        autoClose: 2000
-      })
-    } else if (status === 'decline') {
-      toast.update(toastId.current, {
-        render: "Declined friend request",
-        type: toast.TYPE.ERROR,
-        autoClose: 2000
-      })
-    }
-  }
-
   return (
-    <div className='chat-page'>
-      <div className='menu-section'>
-        <AddFriend/>
-      </div>
-      <div className='chat-section'>
-        <div className='chat-display-container'>
-          <ChatDisplay messages={messages} />
+    loading ? 
+      <div className='loading-page'>
+        <Spinner 
+          thickness='4px'
+          speed='0.65s'
+          emptyColor='gray.200'
+          color='blue.500'
+          size='xl'
+        />
+      </div> 
+    :
+      <div className='chat-page'>
+        <div className='menu-section'>
+          <span>Friend Requests</span>
+          <span>Log Out</span>
         </div>
-        <ChatInput sendMessage={sendMessage}/>
+        <div className='friend-section'>
+          <SendFriendRequest/>
+          <FriendList friendList={friendList} selectFriend={(friend) => setSelectedFriend(friend)}/>
+        </div>
+        <div className='chat-section'>
+          <div className='chat-display-container'>
+            <ChatDisplay messages={messages} selectedFriend={selectedFriend}/>
+          </div>
+          <ChatInput sendMessage={sendMessage}/>
+        </div>
+        <ReceiveFriendRequest/>
       </div>
-
-        <ToastContainer
-        enableMultiContainer containerId={'A'}
-        position="top-center"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        rtl={false}
-        transition={Flip}
-      />   
-    </div>
-
+    
   )
 }
 

@@ -19,9 +19,9 @@ const App = () => {
                 path="/" 
                 element={
                     <AuthProvider>
-                    <SocketProvider>
+                     <SocketProvider>
                       <Chat/>
-                    </SocketProvider>  
+                     </SocketProvider>  
                     </AuthProvider>              
                 }
               />   

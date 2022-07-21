@@ -1,6 +1,7 @@
 import React, {useState, useContext, createContext, useEffect} from 'react'
 import {Navigate, useLocation} from 'react-router-dom'
 import User from '../apis/User'
+import { Spinner } from '@chakra-ui/react'
 
 const AuthContext = createContext()
 export const useAuth = () => {
@@ -48,7 +49,18 @@ export const AuthProvider = ({children}) => {
 
     return (
         <AuthContext.Provider value={value}>
-            {!loading ? isAuth ? children : <Navigate to='/login' state={{prev: location}} replace /> : null }
+            {!loading ? 
+                isAuth ? children : <Navigate to='/login' state={{prev: location}} replace />
+            : <div className='loading-page'>
+                <Spinner 
+                    thickness='4px'
+                    speed='0.65s'
+                    emptyColor='gray.200'
+                    color='blue.500'
+                    size='xl'
+                /> 
+              </div>
+            }
         </AuthContext.Provider>
     )
 }
