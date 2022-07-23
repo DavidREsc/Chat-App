@@ -50,6 +50,9 @@ router.get('/data', authorize, async (req, res) => {
         'OR messages.recipient_username = users.username WHERE users.username = $1 ORDER BY messages.date',
         [username])
 
+    const pendingFriendRequestsData = await db.query('SELECT sender_username FROM friend_requests ' +
+        'WHERE receiver_username = $1 AND request_status = $2', [username, 'pending'])
+
     const friends = await Promise.all(friendsData.rows.map(async d => {
         const friend = {}
         if (d.sender_username !== username) friend['friend'] = d.sender_username
@@ -67,7 +70,8 @@ router.get('/data', authorize, async (req, res) => {
             "type": message.sender_username === username ? "sent" : "received"
         }
     })
-    res.json({friends, messages})
+    const pendingFriendRequests = pendingFriendRequestsData.rows
+    res.json({friends, messages, pendingFriendRequests})
 })
 
 module.exports = router

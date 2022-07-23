@@ -6,8 +6,12 @@
 }
 
 .menu-section {
-    width: 25em;
-    background-color: #0063d1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 30em;
+    background-color: hsl(212, 100%, 35%)
 }
 
 .friend-section {
@@ -73,7 +77,6 @@
 }
 
 .online-status-indicator {
-    margin-right: 25px;
     font-size: 0.7em;
 }
 
@@ -89,4 +92,36 @@
 
 .new-messages-icon {   
     margin-left: 2px;
+}
+
+.friend-list-item-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 5em;
+}
+
+.pending-friend-requests-count {
+    color: #ff0000;
+    font-size: 0.7em;
+    margin-left: 3px;
+}
+
+.pending-friend-requests-btn {
+    display: flex;
+    color: #DDDDDD;
+    font-weight: bold;
+    font-size: 1.5em;
+    align-items: center;
+}
+
+.pending-friend-requests-btn:hover {
+    color: white
+}
+
+.pending-friend-request-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 1em;
 }

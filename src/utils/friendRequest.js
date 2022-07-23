@@ -25,7 +25,7 @@ const friendRequest = async (io, socket, redis, username, callback) => {
 
         // fetch socketId of receiver
         const receiverId = await redis.get(username)
-        console.log("Wtf")
+        console.log("wtf")
 
 
         // send request to receiver

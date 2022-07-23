@@ -9,11 +9,13 @@ import 'react-toastify/dist/ReactToastify.css';
 import {useSocket} from '../contexts/Socket'
 import '../styles/chat.css'
 import { Spinner } from '@chakra-ui/react'
+import PendingFriendRequests from '../components/home/PendingFriendRequests'
 
 const Chat = () => {
 
   const [messages, setMessages] = useState([])
   const [friendList, setFriendList] = useState([])
+  const [pendingFriendRequests, setPendingFriendRequests] = useState([])
   const [selectedFriend, setSelectedFriend] = useState("")
   const [loading, setLoading] = useState(true)
   const {socket} = useSocket()
@@ -27,6 +29,7 @@ const Chat = () => {
     })
     console.log("chat")
     socket.on('receive-message', (message, friend) => {
+      console.log(message)
       setMessages(prev => [...prev, {
         message,
         friend,
@@ -34,18 +37,34 @@ const Chat = () => {
       }])
     })
     socket.on('user joined', (user) => console.log(user))
-    socket.on('accepted-friend-request', (friend) => {
+    socket.on('accepted-friend-request', (friend, status) => {
       setFriendList(prev => prev.concat(friend))
+      if (!friendList.length) setSelectedFriend(friend.friend)
+      const updatePendingFriendRequests = pendingFriendRequests.filter(r => r.sender_username !== friend.friend)
+      setPendingFriendRequests(updatePendingFriendRequests)
+    })
+    socket.on('declined-friend-request', (friend) => {
+      const updatePendingFriendRequests = pendingFriendRequests.filter(r => r.sender_username !== friend)
+      setPendingFriendRequests(updatePendingFriendRequests)
+    })
+    socket.on('friend-connection-status', (status, username) => {
+      let copy = friendList.slice()
+      for (let friend of copy) {
+        if (friend.friend === username) friend.status = status
+      }
+      setFriendList(copy)
+      console.log('what')
     })
     
     return () => {
       socket.off('welcome message')
-      socket.off('message')
+      socket.off('receive-message')
       socket.off('user joined')
       socket.off('accepted-friend-request')
-      socket.disconnect(["yo"])
+      socket.off('declined-friend-request')
+      socket.off('friend-connection-status')
     }
-  },[socket])
+  },[socket, friendList, pendingFriendRequests])
 
   useEffect(() => {
     const getData = async () => {
@@ -53,11 +72,13 @@ const Chat = () => {
         const data = await User.get('/data', {
           method: 'GET'
         })
-        console.log(data.data.friends)
+        console.log(data.data)
         setFriendList(data.data.friends)
-        setSelectedFriend(data.data.friends[0].friend)
+        setSelectedFriend(data.data.friends[0]?.friend || null)
         setMessages(data.data.messages)
+        setPendingFriendRequests(data.data.pendingFriendRequests)
         setLoading(false)
+        socket.emit('connection-status', data.data.friends, 1)
       } catch (e) {
         console.log(e)
       }
@@ -90,7 +111,7 @@ const Chat = () => {
     :
       <div className='chat-page'>
         <div className='menu-section'>
-          <span>Friend Requests</span>
+          <PendingFriendRequests pendingFriendRequests={pendingFriendRequests}/>
           <span>Log Out</span>
         </div>
         <div className='friend-section'>
@@ -103,7 +124,8 @@ const Chat = () => {
           </div>
           <ChatInput sendMessage={sendMessage}/>
         </div>
-        <ReceiveFriendRequest/>
+        <ReceiveFriendRequest addPendingFriendRequest={(from) => 
+          setPendingFriendRequests(prev => prev.concat({sender_username: from}))}/>
       </div>
     
   )

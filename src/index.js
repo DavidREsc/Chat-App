@@ -10,6 +10,7 @@ const Redis = require('ioredis')
 const authorizeConnection = require('./utils/authorizeConnection')
 const updateRequestStatus = require('./utils/updateRequestStatus')
 const sendMessage = require('./utils/sendMessage')
+const updateConnectionStatus = require('./utils/updateConnectionStatus')
 
 const app = express()
 // Create server and pass in the express app
@@ -45,7 +46,6 @@ io.use(async (socket, next) => {
 
 
 io.on('connection', (socket) => {
-   
 
     socket.on('send message', (message, recipient, callback) => {
         sendMessage(message, recipient, socket, io, redis)
@@ -60,10 +60,21 @@ io.on('connection', (socket) => {
         updateRequestStatus(from, status, socket.handshake.auth.user, socket, io, redis)
     })
 
+    socket.on('connection-status', (friends, status) => {
+        updateConnectionStatus(friends, socket, io, redis, status)
+        socket.handshake.query.friends = friends
+    })
+
     socket.on('disconnect', async () => {
         const username = socket.handshake.auth.user
+        const friends = socket.handshake.query.friends
         console.log(username + " has disconnected")
-        await redis.del(username)
+        updateConnectionStatus(friends, socket, io, redis, 0)
+        try {
+            await redis.del(username)
+        } catch (e) {
+            console.log(e)
+        }
     })
 
 })

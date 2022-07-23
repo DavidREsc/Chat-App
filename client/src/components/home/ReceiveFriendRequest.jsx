@@ -3,13 +3,15 @@ import { useSocket } from '../../contexts/Socket'
 import { ToastContainer, toast, Flip } from 'react-toastify';
 import '../../styles/utils.css'
 
-const ReceiveFriendRequest = () => {
+const ReceiveFriendRequest = (props) => {
     const {socket} = useSocket()
     const toastId = useRef(null)
+    const {addPendingFriendRequest} = props
 
     useEffect(() => {
       socket.on('receive-friend-request', (from) => {
-        console.log("Received")
+        console.log(from)
+        addPendingFriendRequest(from)
         toastId.current = toast.info(<span>
             <p>{from} wants to be your friend</p>
             <button style={{color: 'green', marginLeft: '35px'}} className='request-toast-btn' onClick={() => updateToast('accepted', from)}>Accept</button>
@@ -46,7 +48,10 @@ const ReceiveFriendRequest = () => {
             socket.emit('update-request-status', from, status)
           }
       })
-    }, [socket])
+      return () => {
+        socket.off('receive-friend-request')
+      }
+    }, [socket, addPendingFriendRequest])
 
 
   return (
