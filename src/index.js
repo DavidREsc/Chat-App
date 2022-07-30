@@ -12,6 +12,7 @@ const updateRequestStatus = require('./utils/updateRequestStatus')
 const sendMessage = require('./utils/sendMessage')
 const updateConnectionStatus = require('./utils/updateConnectionStatus')
 const path = require('path');
+const cors = require('cors');
 
 const app = express()
 // Create server and pass in the express app
@@ -23,9 +24,11 @@ const redis = new Redis(process.env.NODE_ENV === 'production' ? process.env.REDI
     'host': '127.0.0.1'
 })
 
+app.use(cors());
 app.use(express.json())
 app.use(cookieParser())
 app.use('/api/v1/user', user)
+app.use(express.static(path.join(__dirname, '../client/build')))
 
 if (process.env.NODE_ENV === 'production') {
     app.use(express.static(path.join(__dirname, '../client/build')))
