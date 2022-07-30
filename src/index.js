@@ -11,6 +11,7 @@ const authorizeConnection = require('./utils/authorizeConnection')
 const updateRequestStatus = require('./utils/updateRequestStatus')
 const sendMessage = require('./utils/sendMessage')
 const updateConnectionStatus = require('./utils/updateConnectionStatus')
+const path = require('path');
 
 const app = express()
 // Create server and pass in the express app
