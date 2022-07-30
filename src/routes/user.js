@@ -6,36 +6,55 @@ const jwtGenerator = require('../middleware/jwtGenerator')
 const checkUser = require('../middleware/checkUser')
 const hashPassword = require('../middleware/hashPassword')
 const authorize = require('../middleware/authorize')
+const sgMail = require('@sendgrid/mail')
 const dayjs = require('dayjs')
 const db = require('../db')
+require('dotenv').config()
 const Redis = require('ioredis')
-const redis = new Redis()
+const redis = new Redis(process.env.NODE_ENV === 'production' ? process.env.REDIS_URL : {
+    'port': 6379,
+    'host': '127.0.0.1'
+})
 
 router.post('/login', validateUserDetails, verifyUser, jwtGenerator, async (req, res) => {
     const {token} = req.body
     try {
         res.cookie('token', token, {httpOnly: true, expires: dayjs().add(7, 'days').toDate()})
-        res.json({username: req.body.username, id: req.body.id})
+        res.send()
     } catch (e) {
         res.status(500).send()
     }
 })
 
-router.post('/signup', validateUserDetails, checkUser, hashPassword,  async (req, res) => {
-    const {username, email, password} = req.body
+router.post('/logout', authorize, async (req, res) => {
+    const token = req.cookies.token
+    try {
+        await db.query('INSERT INTO JwtBlacklist (token) ' +
+            'VALUES ($1) RETURNING *', [token])
+        res.cookie('token', 'none', {expires: new Date(1), httpOnly: true})
+        res.send()
+    } catch (e) {
+        res.status(500).send()
+    }
+})
+
+router.post('/signup', validateUserDetails, checkUser, hashPassword, jwtGenerator,  async (req, res) => {
+    const {username, email, password, token} = req.body
     try {
         const user = await db.query(
             'INSERT INTO users (username, email, password) ' +
             'VALUES ($1, $2, $3) RETURNING *', [username, email, password]
         )
-        res.json({user_id: user.rows[0].user_id})
+        res.cookie('token', token, {httpOnly: true, expires: dayjs().add(7, 'days').toDate()})
+        res.send()
     } catch (e) {
+        console.log(e)
         res.status(500).send()
     }
 })
 
 router.post('/authorized', authorize, (req, res) => {
-    res.json({username: req.username, user_id: req.user_id})
+    res.json({username: req.username})
 })
 
 router.get('/data', authorize, async (req, res) => {

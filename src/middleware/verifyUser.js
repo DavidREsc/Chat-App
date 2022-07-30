@@ -13,7 +13,6 @@ const verifyUser = async (req, res, next) => {
         // Check if password matches
         if (!passwordMatch) return res.status(404).send({"error": {"password": "Password is incorrect"}})
         req.body.username = user.rows[0].username
-        req.body.id = user.rows[0].user_id
         next()
     } catch (e) {
         res.status(500).send()

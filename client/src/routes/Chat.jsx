@@ -4,6 +4,9 @@ import ChatDisplay from '../components/home/ChatDisplay'
 import SendFriendRequest from '../components/home/SendFriendRequest'
 import ReceiveFriendRequest from '../components/home/ReceiveFriendRequest'
 import FriendList from '../components/home/FriendList'
+import Logout from '../components/home/Logout'
+import UserAvatar from '../components/home/UserAvatar'
+import { useAuth } from '../contexts/Auth'
 import User from '../apis/User'
 import 'react-toastify/dist/ReactToastify.css';
 import {useSocket} from '../contexts/Socket'
@@ -19,29 +22,22 @@ const Chat = () => {
   const [selectedFriend, setSelectedFriend] = useState("")
   const [loading, setLoading] = useState(true)
   const {socket} = useSocket()
+  const {user} = useAuth()
 
   useEffect(() => {
-    socket.on('connect', () => {
-      console.log("Successfully connected")
-    })
-    socket.on('welcome message', (m) => {
-      console.log(m)
-    })
-    console.log("chat")
     socket.on('receive-message', (message, friend) => {
-      console.log(message)
       setMessages(prev => [...prev, {
         message,
         friend,
         "type": "received"
       }])
     })
-    socket.on('user joined', (user) => console.log(user))
     socket.on('accepted-friend-request', (friend, status) => {
       setFriendList(prev => prev.concat(friend))
       if (!friendList.length) setSelectedFriend(friend.friend)
       const updatePendingFriendRequests = pendingFriendRequests.filter(r => r.sender_username !== friend.friend)
       setPendingFriendRequests(updatePendingFriendRequests)
+      socket.emit('add-new-friend', (friend))
     })
     socket.on('declined-friend-request', (friend) => {
       const updatePendingFriendRequests = pendingFriendRequests.filter(r => r.sender_username !== friend)
@@ -52,14 +48,12 @@ const Chat = () => {
       for (let friend of copy) {
         if (friend.friend === username) friend.status = status
       }
+      if (status) copy.sort((a,b) => (a.status > b.status) ? -1 : ((b.status > a.status) ? 1 : 0))
       setFriendList(copy)
-      console.log('what')
     })
     
     return () => {
-      socket.off('welcome message')
       socket.off('receive-message')
-      socket.off('user joined')
       socket.off('accepted-friend-request')
       socket.off('declined-friend-request')
       socket.off('friend-connection-status')
@@ -72,7 +66,6 @@ const Chat = () => {
         const data = await User.get('/data', {
           method: 'GET'
         })
-        console.log(data.data)
         setFriendList(data.data.friends)
         setSelectedFriend(data.data.friends[0]?.friend || null)
         setMessages(data.data.messages)
@@ -87,14 +80,18 @@ const Chat = () => {
   },[socket])
 
   const sendMessage = (message, callback) => {
-    socket.emit('send message', message, selectedFriend, () => {
-      setMessages(prev => [...prev, {
-        message,
-        "friend": selectedFriend,
-        "type": "sent"
-      }])
-      callback()
-    })
+    try {
+      socket.emit('send message', message, selectedFriend, () => {
+        setMessages(prev => [...prev, {
+          message,
+          "friend": selectedFriend,
+          "type": "sent"
+        }])
+        callback()
+      })
+    } catch (e) {
+      console.log(e)
+    }
   }
 
   return (
@@ -111,8 +108,14 @@ const Chat = () => {
     :
       <div className='chat-page'>
         <div className='menu-section'>
-          <PendingFriendRequests pendingFriendRequests={pendingFriendRequests}/>
-          <span>Log Out</span>
+          <span className='user-details'>
+            <h1 className='welcome-text'>{'Welcome, ' + user.username + '!'}</h1>
+            <UserAvatar size={'2xl'} name={user.username}/>
+          </span>
+          <span className='menu-utilities'>
+            <PendingFriendRequests pendingFriendRequests={pendingFriendRequests}/>
+            <Logout />
+          </span>
         </div>
         <div className='friend-section'>
           <SendFriendRequest/>
@@ -122,7 +125,7 @@ const Chat = () => {
           <div className='chat-display-container'>
             <ChatDisplay messages={messages} selectedFriend={selectedFriend}/>
           </div>
-          <ChatInput sendMessage={sendMessage}/>
+          <ChatInput sendMessage={sendMessage} selectedFriend={selectedFriend}/>
         </div>
         <ReceiveFriendRequest addPendingFriendRequest={(from) => 
           setPendingFriendRequests(prev => prev.concat({sender_username: from}))}/>

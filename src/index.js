@@ -17,27 +17,42 @@ const app = express()
 const server = http.createServer(app)
 // Initialize socketio and pass in the server
 const io = socket(server)
-const redis = new Redis()
+const redis = new Redis(process.env.NODE_ENV === 'production' ? process.env.REDIS_URL : {
+    'port': 6379,
+    'host': '127.0.0.1'
+})
 
 app.use(express.json())
 app.use(cookieParser())
 app.use('/api/v1/user', user)
 
+if (process.env.NODE_ENV === 'production') {
+    app.use(express.static(path.join(__dirname, '../client/build')))
+}
+
 io.use(async (socket, next) => {
     const token = cookie.parse(socket.handshake.headers.cookie).token
     authorizeConnection(token, async (err, data) => {
-        if (err) {
+        
+        if (err) {       
             console.log(err)
             next(new Error(err))
         }
         else {
-            const username = data
-            socket.handshake.auth.user = username
             try {
-                await redis.set(username, socket.id)
+                const username = data
+                const existing = await redis.get(username)
+                if (io.sockets.sockets.get(existing)) {
+                    io.sockets.sockets.get(existing).disconnect()
+                }
+                socket.handshake.auth.user = username
+                socket.handshake.query.friends = []
+                const response = await redis.set(username, socket.id)  
                 next()
+
             }
             catch (e) {
+                console.log(e)
                 next(new Error(e))
             }
         }
@@ -46,7 +61,6 @@ io.use(async (socket, next) => {
 
 
 io.on('connection', (socket) => {
-
     socket.on('send message', (message, recipient, callback) => {
         sendMessage(message, recipient, socket, io, redis)
         callback('Message delivered')
@@ -65,10 +79,13 @@ io.on('connection', (socket) => {
         socket.handshake.query.friends = friends
     })
 
+    socket.on('add-new-friend', (friend) => {
+        socket.handshake.query.friends.push(friend)
+    })
+
     socket.on('disconnect', async () => {
         const username = socket.handshake.auth.user
         const friends = socket.handshake.query.friends
-        console.log(username + " has disconnected")
         updateConnectionStatus(friends, socket, io, redis, 0)
         try {
             await redis.del(username)

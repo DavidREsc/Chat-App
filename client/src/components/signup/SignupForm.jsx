@@ -15,8 +15,9 @@ import {
 const schema = yup.object().shape({
   username: yup.string()
     .required('Username is required')
-    .min(4, "Username must be 4 characters or more")
+    .min(5, "Username must be 5 characters or more")
     .max(16, "Username must be 16 characters or less")
+    .matches('^[a-zA-Z0-9]([._-](?![._-])|[a-zA-Z0-9]){3,14}[a-zA-Z0-9]$', 'Invalid username')
     .trim(),
   email: yup.string()
     .email('Invalid email')
@@ -42,7 +43,7 @@ const SignupForm = (props) => {
           <Center>
             <Heading m='4'>Sign-up</Heading>
           </Center>
-
+          
           <FormControl
             isInvalid={!!errors?.username?.message || !!error?.username} 
             isRequired

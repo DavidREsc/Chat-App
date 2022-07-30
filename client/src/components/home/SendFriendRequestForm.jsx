@@ -23,7 +23,7 @@ const SendFriendRequestForm = (props) => {
   return (
     <form onSubmit={(e) => handleSubmit(e)} className='friend-request-form'>
         <FormControl isInvalid={error}>
-          <Center mb='3'>
+          <Center mb='5' mt='5'>
             <Heading size='md'>Add a Friend</Heading>
           </Center>
           <Input

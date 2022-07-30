@@ -4,7 +4,6 @@ import { useSocket } from '../../contexts/Socket'
 const PendingFriendRequestContainer = (props) => {
   const {request} = props
   const {socket} = useSocket()
-  console.log(request)
   return (
     <li className='pending-friend-request-container'>
       <p style={{fontSize: '1.1em'}}>{request.sender_username}</p>

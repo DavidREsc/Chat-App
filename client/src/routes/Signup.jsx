@@ -1,5 +1,5 @@
 import React, {useState} from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import SignupForm from '../components/signup/SignupForm'
 import LoginLink from '../components/signup/LoginLink'
 import User from '../apis/User'
@@ -10,12 +10,14 @@ const Signup = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const navigate = useNavigate()
+  const location = useLocation()
+  const prevLocation = location.state?.prev?.pathname || "/"
 
   const onSubmitHandler = async (data) => {
     setLoading(true)
     const {username, email, password, confirmPassword} = data
     try {
-      const response = await User.post('/signup', {
+      await User.post('/signup', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         username,
@@ -23,8 +25,7 @@ const Signup = () => {
         password,
         confirmPassword
       })
-      const id = response.data.user_id
-      navigate(`/user/verify/${id}`, {replace: true})  
+      navigate(prevLocation, {replace: true})
     } catch (e) {
         setError(e.response.data.error)
         setLoading(false)

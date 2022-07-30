@@ -10,7 +10,6 @@ const ReceiveFriendRequest = (props) => {
 
     useEffect(() => {
       socket.on('receive-friend-request', (from) => {
-        console.log(from)
         addPendingFriendRequest(from)
         toastId.current = toast.info(<span>
             <p>{from} wants to be your friend</p>
@@ -44,7 +43,6 @@ const ReceiveFriendRequest = (props) => {
                 autoClose: 2000
               })      
             }
-            console.log(from, status)
             socket.emit('update-request-status', from, status)
           }
       })

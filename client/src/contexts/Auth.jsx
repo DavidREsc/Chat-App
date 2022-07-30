@@ -28,7 +28,6 @@ export const AuthProvider = ({children}) => {
             }
             setLoading(false)
         }
-        console.log('auth')
         isAuthorized()
     },[])
 

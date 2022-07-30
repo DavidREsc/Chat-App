@@ -1,7 +1,6 @@
 const db = require('../db')
 
 const updateRequestStatus = async (sender, status, receiver, socket, io, redis) => {
-    console.log(sender, status, receiver)
     try {
         const request = await db.query('UPDATE friend_requests SET request_status = $1 ' +
                 'WHERE sender_username = $2 AND receiver_username = $3 RETURNING *', [status, sender, receiver])
