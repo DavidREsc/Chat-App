@@ -3,7 +3,7 @@ const db = require('../db')
 const updateRequestStatus = async (sender, status, receiver, socket, io, redis) => {
     try {
         const request = await db.query('UPDATE friend_requests SET request_status = $1 ' +
-                'WHERE sender_username = $2 AND receiver_username = $3 RETURNING *', [status, sender, receiver])
+                'WHERE sender_username ILIKE $2 AND receiver_username ILIKE $3 RETURNING *', [status, sender, receiver])
         const friend = request.rows[0].sender_username
         if (request.rows[0].request_status === 'accepted') { 
             const friendId = await redis.get(friend)
