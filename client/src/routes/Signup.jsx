@@ -15,7 +15,9 @@ const Signup = () => {
 
   const onSubmitHandler = async (data) => {
     setLoading(true)
-    const {username, email, password, confirmPassword} = data
+    const {email, password, confirmPassword} = data
+    let {username} = data
+    username = username.charAt(0).toUpperCase() + username.slice(1)
     try {
       await User.post('/signup', {
         method: 'POST',

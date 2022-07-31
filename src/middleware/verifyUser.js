@@ -6,7 +6,7 @@ const verifyUser = async (req, res, next) => {
     const {email, password} = req.body
     try {
         
-        const user = await db.query('SELECT * FROM users WHERE email = $1', [email])
+        const user = await db.query('SELECT * FROM users WHERE email ILIKE $1', [email])
         // Check if user exists
         if (!user.rows.length) return res.status(404).json({"error": {"email": "User with this email does not exist"}})
         const passwordMatch = await bcrypt.compare(password, user.rows[0].password)
