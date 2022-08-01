@@ -6,7 +6,7 @@ const jwtGenerator = require('../middleware/jwtGenerator')
 const checkUser = require('../middleware/checkUser')
 const hashPassword = require('../middleware/hashPassword')
 const authorize = require('../middleware/authorize')
-const sgMail = require('@sendgrid/mail')
+const createUser = require('../middleware/createUser')
 const dayjs = require('dayjs')
 const db = require('../db')
 require('dotenv').config()
@@ -38,13 +38,9 @@ router.post('/logout', authorize, async (req, res) => {
     }
 })
 
-router.post('/signup', validateUserDetails, checkUser, hashPassword, jwtGenerator,  async (req, res) => {
-    const {username, email, password, token} = req.body
+router.post('/signup', validateUserDetails, checkUser, hashPassword, createUser, jwtGenerator,  async (req, res) => {
+    const {token} = req.body
     try {
-        const user = await db.query(
-            'INSERT INTO users (username, email, password) ' +
-            'VALUES ($1, $2, $3) RETURNING *', [username, email, password]
-        )
         res.cookie('token', token, {httpOnly: true, expires: dayjs().add(7, 'days').toDate()})
         res.send()
     } catch (e) {
@@ -54,43 +50,35 @@ router.post('/signup', validateUserDetails, checkUser, hashPassword, jwtGenerato
 })
 
 router.post('/authorized', authorize, (req, res) => {
-    res.json({username: req.username})
+    res.json({username: req.username, user_id: req.user_id})
 })
 
 router.get('/data', authorize, async (req, res) => {
-    const username = req.username;
-    const friendsData = await db.query('SELECT sender_username, receiver_username ' +
-        'FROM friend_requests WHERE receiver_username = $1 AND request_status = $2 ' +
-        'OR sender_username = $3 AND request_status = $4',
-        [username, 'accepted', username, 'accepted'])
+    const user_id = req.user_id;
+    const friendsData = await db.query('SELECT username FROM friend_requests AS f, ' +
+        'users AS u WHERE CASE WHEN f.sender_id = $1 AND f.request_status = $2 ' +
+        'THEN f.receiver_id = u.user_id WHEN f.receiver_id = $3 AND f.request_status = $4 ' +
+        'THEN f.sender_id = u.user_id END', [user_id, 'accepted', user_id, 'accepted'])
 
-    const messagesData = await db.query('SELECT sender_username, recipient_username, message ' +
-        'FROM users INNER JOIN messages ON messages.sender_username = users.username ' +
-        'OR messages.recipient_username = users.username WHERE users.username = $1 ORDER BY messages.date',
-        [username])
+    const messagesData = await db.query('SELECT username as friend, message, CASE WHEN m.sender_id = $1 THEN \'sent\' WHEN m.recipient_id = $2 THEN \'received\' END AS type ' +
+        'FROM users AS u, messages AS m WHERE CASE WHEN m.sender_id = $3 THEN m.recipient_id = u.user_id WHEN m.recipient_id = $4 THEN m.sender_id = u.user_id END ORDER BY m.date',
+        [user_id, user_id, user_id, user_id])
 
-    const pendingFriendRequestsData = await db.query('SELECT sender_username FROM friend_requests ' +
-        'WHERE receiver_username = $1 AND request_status = $2', [username, 'pending'])
+
+    const pendingFriendRequestsData = await db.query('SELECT username as sender_username FROM users AS u, friend_requests AS f WHERE ' +
+        'CASE WHEN f.receiver_id = $1 AND f.request_status = $2 THEN f.sender_id = u.user_id END', [user_id, 'pending'])
 
     const friends = await Promise.all(friendsData.rows.map(async d => {
         const friend = {}
-        if (d.sender_username !== username) friend['friend'] = d.sender_username
-        else friend['friend'] = d.receiver_username
-        const online = await redis.get(friend.friend)
+        friend['friend'] = d.username
+        const online = await redis.get(d.username.toLowerCase())
         if (online) friend['status'] = 1
         else friend['status'] = 0
         return friend
     }))
-    const messages = messagesData.rows.map(message => {
-        return {
-            "message": message.message,
-            "friend": message.sender_username !== username ?
-                      message.sender_username : message.recipient_username,
-            "type": message.sender_username === username ? "sent" : "received"
-        }
-    })
-    const pendingFriendRequests = pendingFriendRequestsData.rows
-    res.json({friends, messages, pendingFriendRequests})
+
+    /*res.json({friends, messages, pendingFriendRequests})*/
+    res.json({friends, messages: messagesData.rows, pendingFriendRequests: pendingFriendRequestsData.rows})
 })
 
 module.exports = router

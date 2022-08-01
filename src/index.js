@@ -43,14 +43,14 @@ io.use(async (socket, next) => {
         }
         else {
             try {
-                const username = data
-                const existing = await redis.get(username)
+                const user = data
+                const existing = await redis.get(user.username.toLowerCase())
                 if (io.sockets.sockets.get(existing)) {
                     io.sockets.sockets.get(existing).disconnect()
                 }
-                socket.handshake.auth.user = username
+                socket.handshake.auth.user = user
                 socket.handshake.query.friends = []
-                const response = await redis.set(username, socket.id)  
+                const response = await redis.set(user.username.toLowerCase(), socket.id)  
                 next()
 
             }
@@ -74,7 +74,7 @@ io.on('connection', (socket) => {
     })
 
     socket.on('update-request-status', (from, status) => {
-        updateRequestStatus(from, status, socket.handshake.auth.user, socket, io, redis)
+        updateRequestStatus(from, status, socket, io, redis)
     })
 
     socket.on('connection-status', (friends, status) => {
@@ -87,11 +87,11 @@ io.on('connection', (socket) => {
     })
 
     socket.on('disconnect', async () => {
-        const username = socket.handshake.auth.user
+        const username = socket.handshake.auth.user.username
         const friends = socket.handshake.query.friends
         updateConnectionStatus(friends, socket, io, redis, 0)
         try {
-            await redis.del(username)
+            await redis.del(username.toLowerCase())
         } catch (e) {
             console.log(e)
         }

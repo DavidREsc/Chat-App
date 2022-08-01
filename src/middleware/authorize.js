@@ -11,6 +11,7 @@ const authorize = async (req, res, next) => {
         if (blackListedToken.rows.length) return res.status(401).json({"error": "You are not authorized"})
         const verified = jwt.verify(token, process.env.JWTSECRET)
         req.username = verified.username
+        req.user_id = verified.user_id
         next()
     } catch (e) {
         res.status(500).send()
