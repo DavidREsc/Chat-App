@@ -4,7 +4,9 @@ require('dotenv').config()
 
 const authorize = async (req, res, next) => {
     const token = req.cookies.token
-    if (!token) return res.status(401).json({"error": "You are not authorized"})
+    if (!token) {
+        return res.status(401).json({"error": "You are not authorized"})
+    }
     try {
         const blackListedToken = await db.query('SELECT token FROM JwtBlacklist ' + 
             'WHERE token = $1', [token])

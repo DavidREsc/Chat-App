@@ -2,8 +2,10 @@ const v = require('validator')
 
 const validateUserDetails = (req, res, next) => {
     let {username, email, password} = req.body
+    
     if (username !== undefined) {
         if (v.isEmpty(username)) return res.status(400).json({"error": "Username not provided"})
+        else if (username.length < 5 || username.length > 16) return res.status(400).json({"error": "Username must be between 5 and 16 characters"})
         username = v.escape(username)
         username = v.trim(username)
         req.body.username = username

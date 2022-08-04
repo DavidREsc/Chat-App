@@ -19,6 +19,7 @@ const redis = new Redis(process.env.NODE_ENV === 'production' ? process.env.REDI
 router.post('/login', validateUserDetails, verifyUser, jwtGenerator, async (req, res) => {
     const {token} = req.body
     try {
+        
         res.cookie('token', token, {httpOnly: true, expires: dayjs().add(7, 'days').toDate()})
         res.send()
     } catch (e) {
