@@ -26,7 +26,7 @@ const LoginForm = (props) => {
     const {register, handleSubmit, formState: {errors}} = useForm({
       resolver: yupResolver(schema)
     })
-    const {onSubmitHandler, error, loading} = props
+    const {onSubmitHandler, error, loading, loadingD1, loadingD2} = props
 
   return (
       <form className='login-form' onSubmit={handleSubmit(onSubmitHandler)} noValidate>
@@ -60,6 +60,11 @@ const LoginForm = (props) => {
           </FormErrorMessage>
         </FormControl>
         <Button type='submit' isLoading={loading ? true : false} m='5' colorScheme='teal'>Submit</Button>
+        <Button type='button' m='1' isLoading={loadingD1 ? true : false} onClick={() => onSubmitHandler({
+          "email": "demo1@gmail.com", "password": "demoaccount1"}, "d1")}>Demo Account 1</Button>
+        <Button type='button' m='1' isLoading={loadingD2 ? true : false} onClick={() => onSubmitHandler({
+          "email": "demo2@gmail.com", "password": "demoaccount2"
+        }, "d2")}>Demo Account 2</Button>
       </form>
   )
 }
