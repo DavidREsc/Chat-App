@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "env-cmd -f ./config/dev.env nodemon src/index.js ",
     "heroku-postbuild": "cd client && npm install && npm run build",
-    "start": "node src/index.js",
+    "start": "concurrently \"env-cmd -f ./config/start.env nodemon src/index.js\" \"cd client && npm install && npm start\"",
     "test": "env-cmd -f ./config/test.env jest --watch"
   },
   "jest": {
@@ -18,6 +18,7 @@
   "dependencies": {
     "@sendgrid/mail": "^7.7.0",
     "bcrypt": "^5.0.1",
+    "concurrently": "^7.3.0",
     "cookie": "^0.5.0",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",

@@ -4,6 +4,7 @@
 ## Requirements
 
 - Redis
+- PostgreSQL
 
 ## Usage
 
@@ -17,7 +18,15 @@ Go into the project directory
 cd Chat-App
 ```
 
-Start Redis server and run the command:
+Install modules
+
+```
+npm install 
+```
+
+Enter your own values in the start.env file within the config directory
+
+Start your Redis server and run the command:
 
 ```
 npm start
