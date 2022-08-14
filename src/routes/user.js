@@ -54,31 +54,36 @@ router.post('/authorized', authorize, (req, res) => {
     res.json({username: req.username, user_id: req.user_id})
 })
 
+// Retrieve user's friend list, pending friend requests, and messages sent/received
 router.get('/data', authorize, async (req, res) => {
     const user_id = req.user_id;
+
+    // Friend list
     const friendsData = await db.query('SELECT username FROM friend_requests AS f, ' +
         'users AS u WHERE CASE WHEN f.sender_id = $1 AND f.request_status = $2 ' +
         'THEN f.receiver_id = u.user_id WHEN f.receiver_id = $3 AND f.request_status = $4 ' +
         'THEN f.sender_id = u.user_id END', [user_id, 'accepted', user_id, 'accepted'])
 
+    // Messages
     const messagesData = await db.query('SELECT username as friend, message, CASE WHEN m.sender_id = $1 THEN \'sent\' WHEN m.recipient_id = $2 THEN \'received\' END AS type ' +
         'FROM users AS u, messages AS m WHERE CASE WHEN m.sender_id = $3 THEN m.recipient_id = u.user_id WHEN m.recipient_id = $4 THEN m.sender_id = u.user_id END ORDER BY m.date',
         [user_id, user_id, user_id, user_id])
 
-
+    // Pending friend requests
     const pendingFriendRequestsData = await db.query('SELECT username as sender_username FROM users AS u, friend_requests AS f WHERE ' +
         'CASE WHEN f.receiver_id = $1 AND f.request_status = $2 THEN f.sender_id = u.user_id END', [user_id, 'pending'])
 
+    // Format friend list data
     const friends = await Promise.all(friendsData.rows.map(async d => {
         const friend = {}
         friend['friend'] = d.username
+        // Check if friend's username is stored in Redis
         const online = await redis.get(d.username.toLowerCase())
         if (online) friend['status'] = 1
         else friend['status'] = 0
         return friend
     }))
 
-    /*res.json({friends, messages, pendingFriendRequests})*/
     res.json({friends, messages: messagesData.rows, pendingFriendRequests: pendingFriendRequestsData.rows})
 })
 

@@ -20,6 +20,10 @@ export const SocketProvider = ({children}) => {
         socket.on('connect', (e) => {
             setLoading(false)
         })
+        socket.on("connect_error", (e) => {
+            navigate('/login', {replace: true})
+        })
+
         socket.on('error', (e) => {
             navigate('/login', {replace: true})
         })
@@ -29,6 +33,7 @@ export const SocketProvider = ({children}) => {
         })
         return () => {
             socket.off('connect')
+            socket.off('connect_error')
             socket.off('error')
             socket.disconnect()
         }
