@@ -2,10 +2,8 @@ import React from 'react'
 import {useNavigate} from 'react-router-dom'
 import {Button} from '@chakra-ui/react'
 import User from '../../apis/User'
-import { useSocket } from '../../contexts/Socket'
 
 const Logout = () => {
-  const {socket} = useSocket()
   const navigate = useNavigate()
   const logoutHandler = async () => {
     try {
@@ -20,7 +18,7 @@ const Logout = () => {
   }
 
   return (
-    <Button colorScheme='red' onClick={logoutHandler} m='4'>Log Out</Button>
+    <Button colorScheme='red' onClick={logoutHandler} m='4' pl='10' pr='10'>Log Out</Button>
   )
 }
 

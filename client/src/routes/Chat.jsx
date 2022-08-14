@@ -6,6 +6,7 @@ import ReceiveFriendRequest from '../components/home/ReceiveFriendRequest'
 import FriendList from '../components/home/FriendList'
 import Logout from '../components/home/Logout'
 import UserAvatar from '../components/home/UserAvatar'
+import UploadAvatarPic from '../components/home/UploadAvatarPic'
 import { useAuth } from '../contexts/Auth'
 import User from '../apis/User'
 import 'react-toastify/dist/ReactToastify.css';
@@ -114,6 +115,7 @@ const Chat = () => {
           </span>
           <span className='menu-utilities'>
             <PendingFriendRequests pendingFriendRequests={pendingFriendRequests}/>
+            <UploadAvatarPic />
             <Logout />
           </span>
         </div>
@@ -122,7 +124,11 @@ const Chat = () => {
           <FriendList friendList={friendList} selectFriend={(friend) => setSelectedFriend(friend)}/>
         </div>
         <div className='chat-section'>
-          <div className='chat-display-container'>
+          {selectedFriend && <div className='name-bar'>
+            <UserAvatar size={'md'} name={selectedFriend}/>
+            {selectedFriend}
+          </div>}
+          <div className='chat-display-container'>      
             <ChatDisplay messages={messages} selectedFriend={selectedFriend}/>
           </div>
           <ChatInput sendMessage={sendMessage} selectedFriend={selectedFriend}/>
