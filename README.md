@@ -1,5 +1,5 @@
 # Chat-App
-![Sample App Image](./imgs/demo.jpg)
+![Sample App Image](./imgs/Demo.jpg)
 
 ## Requirements
 
