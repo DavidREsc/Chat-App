@@ -46,9 +46,8 @@
 
 .name-bar {
     display: flex;
-    color: black;
-    border-bottom: 1px solid black;
-    background-color: rgba(0, 0, 0, 0.1);
+    color: #DDD;
+    background-color: #314e89;
     font-size: 3em;
     padding: 0.5em;
     align-items: center;
